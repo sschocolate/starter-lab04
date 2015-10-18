@@ -21,7 +21,7 @@ class Order extends Application {
         
         $neworder = $this->orders->create();
         $neworder->num = $order_num;
-        $neworder->date = date();
+        $neworder->date = date('Y-M-d H:m:s');
         $neworder->status = 'a';
         $neworder->total = 0;
         $this->orders->add($neworder);
@@ -102,14 +102,23 @@ class Order extends Application {
     }
 
     // proceed with checkout
-    function proceed($order_num) {
-        //FIXME
+    function commit($order_num) {
+        if(!$this->orders->validate($order_num))
+            redirect('/order/display_menu/' . $order_num);
+        $record = $this->orders->get($order_num);
+        $record->data = date(DATE_ATOM);
+        $record->status = 'c';
+        $record->total = $this->orders->total($order_num);
+        $this->orders->update($record);
         redirect('/');
     }
 
     // cancel the order
     function cancel($order_num) {
-        //FIXME
+        $this->orderitems->delete_some($order_num);
+        $record = $this->orders->get($order_num);
+        $record->status = 'x';
+        $this->orders->update($record);
         redirect('/');
     }
 
